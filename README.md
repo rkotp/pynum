@@ -1,9 +1,4 @@
 # PYNUM: Python Based Network Users Management
----
-### Authors
-It has been developed under th framework of a master thesis. The authors are:
-* Pedro Ruben González Sánchez - Developer
-* Pablo Serrano - Supervisor
 ### Description
 What's Pynum? Pynum is the acronym for Python Based Network Users Management. As the acronym tells, this tool will help us to handle the users connected to a certain network. It is developed in Python in its third version. It has been developed and designed following two guidelines:
 * Easy-to-use: It has been launched with an easy web interface that lets everybody use it.
@@ -13,3 +8,11 @@ You can get Pynum through three methods:
 * apt:
 * pip:
 * docker:
+### Requirements
+### Usage
+### Contact
+### License
+### Authors
+It has been developed under th framework of a master thesis. The authors are:
+* Pedro Ruben González Sánchez - Developer
+* Pablo Serrano - Supervisor
