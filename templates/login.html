@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block body %}
+<br>
+<h2>Log in</h2>
+<br>
+<div onload="auxiliar()"></div>
+<div id="incorrect-credentias-message" class="alert alert-danger col-lg" role="alert" hidden="True">
+  <strong>Incorrect username or password</strong>
+</div>
+<div id="error-message" class="alert alert-danger col-lg" role="alert" hidden="True">
+  <strong>Error: </strong>The service is having some troubles. Try it again. If the error persists, try to restart the service. If it persists, you can contact the developer <a href="https://www.github.com/rkotp/pynum">here</a>
+</div>
+<div id="timedout-message" class="alert alert-danger col-lg" role="alert" hidden="True">
+  <strong>Timed out: </strong>Due to inactivity you have been logged out
+</div>
+<form>
+    <div class="form-group">
+      <label for="input_username">Username</label>
+      <input type="text" class="form-control" id="input_username" aria-describedby="emailHelp" placeholder="Enter username">
+    </div>
+    <div class="form-group">
+      <label for="input_Password">Password</label>
+      <input type="password" class="form-control" id="input_Password" placeholder="Password">
+    </div>
+  </form>
+  <button onclick="login()" class="btn btn-primary">Submit</button>
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js" integrity="sha512-nOQuvD9nKirvxDdvQ9OMqe2dgapbPB7vYAMrzJihw5m+aNcf0dX53m6YxM4LgA9u8e9eg9QX+/+mPu8kCNpV2A==" crossorigin="anonymous"></script>
+<script>
+  function auxiliar(){
+    if ( document.referrer.endsWith("/logout") ) {
+      document.getElementById("timedout-message").hidden = false
+    }
+  }
+  function login(){
+    get_challenge()
+  }
+
+  function get_challenge(){
+    $.ajax({
+	    url: '/challenge',
+	    success: function(challenge) {
+        console.log("Challenge: " + challenge)
+        send_response(challenge)
+	    },
+	    error: function() {
+        document.getElementById("error-message").hidden = false
+      }
+    });
+  }
+
+  function send_response(challenge){
+    password = document.getElementById("input_Password").value
+    username = document.getElementById("input_username").value
+    challenge_response = CryptoJS.SHA256(challenge + username + password).toString()
+    console.log("Password: " + password )
+    console.log("Response: " + challenge_response )
+    $.ajax({
+      url: '/response',
+      method: 'POST',
+      data: { response: challenge_response },
+	    success: function(response_aux) {
+        console.log("Response: " + response_aux)
+        if(response_aux==1){
+          window.location.href = "/";
+        }else if(response_aux==0){
+          document.getElementById("incorrect-credentias-message").hidden = false
+        }else{
+          document.getElementById("error-message").hidden = false
+        }
+	    },
+	    error: function() {
+        document.getElementById("error-message").hidden = false
+      }
+    });
+  }
+
+</script>
+
+{% endblock %}

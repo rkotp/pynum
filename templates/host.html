@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block body %}
+<!-- VERIFY THAT THE ARGUMENTS PASSED ARE VALID -->
+
+    <div id="host_info" style="margin-top:40px;border:1px dashed grey;border-radius: 25px;padding: 15px" class="col-lg">
+        <h2>{{ hostname }}</h2>
+        <hr>
+        <strong>Hostname: </strong><span id='hostname'>{{ hostname }}</span>
+        <br>
+        <strong>IP: </strong><span id='ip'>{{ ip }}</span>
+        <br>
+        <strong>MAC: </strong><span id='mac'>{{ mac }}</span>
+        <br>
+        <strong>Interface: </strong><span id='iface'>{{ iface }}</span>
+    </div>
+
+    <div class="col-lg" id="actions" style="margin-top:40px;">
+        <h2>Operations <span class="badge badge-secondary" data-toggle="modal" data-target="#exampleModal">i</span></h2>
+        <br>
+        <label for="loops_selector">Timespace (Slow Down only)</label>
+        <input type='number' class="form-control" id="time_selector" value="1" min="0.1" step="0.1">
+        <br>
+        <div class="row" style="margin: 0px;">
+            <button class="btn btn-info" style="margin-right:10px" onclick='slow_down()'>Slow Down</button>
+            <button class='btn btn-info' onclick='disconect()' disabled>Disconnect</button>
+        </div>
+    </div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Help</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            <p>
+                There are two main operations: disconnect and slow down. On one hand, by disconnecting you are sendind a disassociation signal to the access point and the device and both will be disconected from each other.
+            </p>
+            <p>
+                On the other hand, with the option Slow Down you will be sending signals to the host that will affect the connection speed. Theese signals will be spread the amount of time declared at timespace. A lower number, lower speed but hihger impact on the network and the device and easier will be to discover us. 
+            </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<br>
+
+<br>
+<br>
+
+
+<script>
+    function slow_down(){
+        hostname = document.getElementById('hostname').innerHTML
+        ip = document.getElementById('ip').innerHTML
+        mac = document.getElementById('mac').innerHTML
+        iface = document.getElementById('iface').innerHTML
+        time = document.getElementById('time_selector').value
+        // TO_DO: VERIFY ALL THE COMPONENT ARE WELL FORMED AT BOTH SIDES (FRONT AND BACKEND)
+        $.ajax({
+            type: "POST",
+	    url: '/slow-down',
+            data: { iface: iface, ip: ip, mac: mac, time: time} ,
+	    success: function(respuesta) {
+                if ( respuesta[0] == 0 ) {
+                    window.location.href = "../";
+                }else if ( respuesta[0] == 1 ) {
+                    alert('There is already running another process with the same purpose');
+                }else{
+                    alert('An error have been found while performing this operation. Restart the service and try it again. If it persists, contact the develper at https://github.com/rkotp');
+                }
+	    },
+	    error: function() {
+                alert('An error have been found while searching for new hosts. Restart the service and try it again. If it persists, contact the develper at https://github.com/rkotp');
+            }
+        });
+    }
+    
+    function disconect(){
+        alert("The requested feature is not available yet");
+    }
+</script>
+{% endblock %}

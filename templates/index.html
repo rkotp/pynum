@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div onload="refresh()"></div>
+<div class='row'  style='margin:20px 0px'>
+    <div class="alert alert-warning col-lg" role="alert">
+        <strong>Warning: </strong>Background processes could slow down the service performance. Please, be sure to keep runing just those strictly necessary.
+    </div>
+</div>
+<button onclick='display_active_processes()' type="button" class="btn btn-outline-info btn-lg btn-block">Active Processes (<span id='active_processes_count'>0</span>) </button>
+<br>
+<div id="active_processes_div" class="hidden">
+    <p>No active processes yet</p>
+</div>
+<br>
+<button onclick='display_detected_hosts()' type="button" class="btn btn-outline-info btn-lg btn-block">Detected Hosts (<span id='hosts_detected_count'>0</span>)</button>
+<br>
+<div id="detected_hosts_div" class="hidden">
+    <div id="detected_hosts_core" >No host detected yet</div>
+    <button type="button" class="btn btn-info" onclick='discover_hosts()' style="margin-left:10px">
+        <span id="detect_hosts_button">Discover hosts </span><span class="fa fa-search" style="margin-left:5px"></span>
+    </button>
+</div>
+
+<script>
+
+    var active_processes_div_displayed = 0;
+    var detected_hosts_div_displayed = 0;
+    var host_detected_list = 0;
+    load_hosts();
+    load_processes();
+    var interval = setInterval(refresh, 10000);
+
+    function load_hosts(){
+        div_hd_count = document.getElementById("hosts_detected_count");
+        div_hd_info = document.getElementById("detected_hosts_div");
+        div_hd_core = document.getElementById("detected_hosts_core");
+        hd_button = document.getElementById("detect_hosts_button");
+        $.ajax({
+	        url: '/hosts-detected',
+	        success: function(hd_data) {
+                if ( hd_data[0] == 0 ) {
+		            div_hd_count.innerHTML='0';
+                    div_hd_info.innerHTML="<p>No hosts detected yet</p><button type='button' class='btn btn-info' onclick='discover_hosts()'>Discover hosts <span class='fa fa-search' style='margin-left:5px'></span></button>";
+                }else if ( hd_data[0] > 0 ) {
+                    div_hd_count.innerHTML=hd_data[0];
+                    add_host(hd_data[1])
+                    hd_button.innerHTML = "Discover new hosts"
+                }
+	        },
+	        error: function() {
+                div_hd_count.innerHTML='*';
+                div_hd_info.innerHTML='There is an error trying to get the detected hosts. Try to restart the service and if the error persists contact the developer <a href="https://github.com/rkotp" target="_blank">here</a>';
+            }
+        });
+    }
+
+    function load_processes(){
+        div_ap_count = document.getElementById("active_processes_count");
+        div_ap_info = document.getElementById("active_processes_div");
+        $.ajax({
+	        url: '/active-processes',
+	        success: function(ap_data) {
+                    if ( ap_data == "-1" ){
+                        window.location.href = "/logout";
+                    }
+                    else if ( ap_data[0] == 0 ) {
+                        div_ap_count.innerHTML='0';
+                        div_ap_info.innerHTML='<p>No active process yet</p>';
+                    }else if ( ap_data[0] > 0 ) {
+                        div_ap_count.innerHTML=ap_data[0];
+                        active_process(ap_data[1]);
+                    }
+	        },
+	        error: function() {
+                div_ap_count.innerHTML='*';
+                div_ap_info.innerHTML='There is an error trying to get the current processes. Try to restart the service and if the error persists contact the developer <a href="https://github.com/rkotp" target="_blank">here</a>';
+            }
+        });
+    }
+
+    function refresh(){
+        load_processes();
+        load_hosts();
+    }
+
+    function discover_hosts(){
+        window.location.href = "discover";
+    }
+
+    function host_detected(){
+        alert("hola");
+    }
+
+    function display_active_processes(){
+        div = document.getElementById("active_processes_div");
+        if(active_processes_div_displayed==0){
+            div.classList.remove("hidden");
+            active_processes_div_displayed = 1;
+        }else{
+            active_processes_div_displayed = 0;
+            div.classList.add("hidden");
+        }
+    }
+
+    function display_detected_hosts(){
+        div = document.getElementById("detected_hosts_div");
+        if(detected_hosts_div_displayed==0){
+            div.classList.remove("hidden");
+            detected_hosts_div_displayed = 1;
+        }else{
+            detected_hosts_div_displayed = 0;
+            div.classList.add("hidden");
+        }
+    }
+
+    function add_host(hosts){
+        div_core = document.getElementById("detected_hosts_core");
+        var new_content = "<div class='row' style='margin: 0px 0px 10px 0px;'>";
+        //if ( div_core.innerHTML.includes('No host detected yet') ){ 
+        //    new_content = "<div class='row' style='margin: 0px 0px 10px 0px;'>";
+        //} else {
+        //    new_content_2 = div_core.innerHTML.replace('</div></div></div>','</div></div>')
+        //}
+        for (var i = 0; i < hosts.length; i++ ) {
+            new_content += "<div class='card' style='width: 18rem; margin: 10px'><h5 class='card-header'>" + hosts[i][2] + "</h5><div class='card-body'><p class='card-text'><strong>IP:</strong> " + hosts[i][0] + "<br><strong>MAC:</strong> " + hosts[i][1] + "<br><strong>Interface:</strong> " + hosts[i][3] + "</p><form action='/host' method='post'><input style='display:none' name='ip' value='" + hosts[i][0] + "'><input style='display:none' name='mac' value= '" + hosts[i][1] + "'><input style='display:none' name='iface' value='" + hosts[i][3] + "'><input style='display:none' name='hostname' value='" + hosts[i][2] + "'><button href='host' class='btn btn-dark'>Select</button></form></div></div>";
+        }
+        new_content += "</div>";
+        div_core.innerHTML = new_content;
+    }
+
+    function delete_host(){
+        alert("adios");
+    }
+
+    function active_process(processes){
+        div = document.getElementById("active_processes_div");
+        var new_content = "";
+        for (var i = 0; i < processes.length; i++ ) {
+            //if ( div.innerHTML.includes('<p>No active processes yet</p>') ){
+            //    div.innerHTML = "<div class='row'><span style='margin-top:auto;margin-bottom:auto'>" + processes[i][0] + " (" + processes[i][1] +") </span><div class='linear-activity' style='margin-top:auto;margin-bottom:auto'><div class='indeterminate'></div> </div><button type='button' class='btn btn-danger' >x</button></div>";
+            //} else {
+                new_content += "<div class='row'><span style='margin-top:auto;margin-bottom:auto'>" + processes[i][0] + "(" + processes[i][1] +") </span><div class='linear-activity' style='margin-top:auto;margin-bottom:auto'><div class='indeterminate'></div> </div><button type='button' class='btn btn-danger' onclick='stop_process(\"" + processes[i][0] + "\",\"" + processes[i][1] + "\")'>x</button></div>";
+            //}
+        }
+        
+        //new_content += '</div>';
+        div.innerHTML = new_content;
+    }
+
+    function stop_process(action,ip){
+        $.ajax({
+            type: "POST",
+            url: '/kill-process',
+            data: { action: action, ip: ip} ,
+	    success: function(status_code) {
+                if ( status_code == 0 ) {
+                    location.reload();
+                }else {
+                    alert('Active process not found')    
+                }
+	    },
+	    error: function() {
+                div_ap_count.innerHTML='*';
+                div_ap_info.innerHTML='There is an error trying to kill the process. Try to restart the service and if the error persists contact the developer <a href="https://github.com/rkotp" target="_blank">here</a>';
+            }
+        });
+    }
+
+</script>
+{% endblock %}

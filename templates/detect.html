@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class='row'  style='margin:20px 0px'>
+    <div class="alert alert-warning" role="alert">
+        <strong>Warning: </strong>Background processes could slow down the service performance. Please, be sure to execute just those processes strictly necessary
+    </div>
+</div>
+<h2>Host discovery</h2>
+<br>
+<form>
+    <div class="form-group">
+        <label for="interface_selector">Interface</label>
+        <select class="form-control" id="interface_selector">
+            {% for iface in ifaces %}
+            <option value="{{ iface[0] }}">{{ iface[0] }} - {{ iface[4] }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-4">
+            <label for="tries_selector">Tries <span class="badge badge-secondary" data-toggle="modal" data-target="#exampleModal">i</span></label>
+            <input type='number' class="form-control" id="tries_selector" value="1" min="1">
+        </div>
+        <div class="form-group col-md-4">
+            <label for="loops_selector">Loops <span class="badge badge-secondary" data-toggle="modal" data-target="#exampleModal">i</span></label>
+            <input type='number' class="form-control" id="loops_selector" value="1" min="1"></textarea>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="time_selector">Timespace <span class="badge badge-secondary" data-toggle="modal" data-target="#exampleModal">i</span></label>
+            <input type='number' class="form-control" id="time_selector" value="1" min="1"></textarea>
+        </div>
+    </div>
+    <br>  
+</form>
+<div style="text-align: right;">
+    <button onclick="send_process()" class="btn btn-info">Discover</button>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Help</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            <p>
+                To discover all the hosts connected to the network, Pynum will make calls to all possible hosts. The calls will be repeated 'x' number of times. 'Tries' is that 'x' parameter. Once these 'x' calls are made to all the possible hosts in the network, the process will be repeated 'y' times. 'Loops' is that 'y' parameter.
+            </p>
+            <p>
+                Remember! On one hand, the higher the parameter, the more effective the attack will be, as it decreases the chance of packets being lost on the network. On the other hand, the higher the parameters, the slower the discovery and the more detectable we will be on the network. Play with both parameters according to these concepts.
+            </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+    function send_process(){
+        iface = document.getElementById('interface_selector').value
+        tries = document.getElementById('tries_selector').value
+        loops = document.getElementById('loops_selector').value
+        time = document.getElementById('time_selector').value
+        // TO_DO: VERIFY ALL THE COMPONENT ARE WELL FORMED AT BOTH SIDES (FRONT AND BACKEND)
+        $.ajax({
+            type: "POST",
+	        url: '/start-discover',
+                data: { interface: iface, tries: tries, loops: loops, time: time} ,
+	        success: function(respuesta) {
+                if ( respuesta[0] == 0 ) {
+                    window.location.href = "../";
+                }else if ( respuesta[0] == 1 ) {
+                    alert('There is already running another process with the same purpose');
+                }else{
+                    alert('An error have been found while searching for new hosts. Restart the service and try it again. If it persists, contact the develper at https://github.com/rkotp');
+                }
+	        },
+	        error: function() {
+                alert('An error have been found while searching for new hosts. Restart the service and try it again. If it persists, contact the develper at https://github.com/rkotp');
+            }
+        });
+    }
+
+</script>
+{% endblock %}

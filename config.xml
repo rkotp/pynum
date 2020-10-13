@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	# CREDENTIALS
+	<usr>pynum</usr>
+	<pwd>Ch4ng3It!</pwd>
+
+	# INTERFACE ('gui' OR 'cli')
+	<ui_mode>gui</ui_mode>
+
+	# DEBUG ('yes' or 'no')
+	<debug_mode>no</debug_mode>
+
+</configuration>
