@@ -3,6 +3,8 @@ from flask import *
 from lib import interfaces
 import lib.main as libmain
 import lib.wireless_active_scanner as libwas
+import lib.passive_scanner as libps
+import lib.database as libdb
 import re
 from pynum import username
 from pynum import password
@@ -25,6 +27,12 @@ challenges = []
 def web_main():
     if not( is_logged(request) ):
         return redirect(url_for('web_display_log_in'))
+    
+# IF THERE IS ONLY JUST ONE INTERFACE AND THE PASSIE SCANNER IS SET BY DEFAULT, IT SHOULD BE STARTED
+#libdb.initialize_database()
+
+    if (libps.get_ps()[0]):
+        libps.start_ps(libps.get_ps()[1])
     return render_template('index.html')
 
 # **************************************************************************************
@@ -103,8 +111,7 @@ def web_slow_down():
         return 2
     timespace = request.values.get('time')
     gw = interfaces.iface_netgw(iface)
-    o_mac = interfaces.iface_own_mac(iface)           
-    print("slow down")
+    o_mac = interfaces.iface_own_mac(iface)
     aux = libmain.slow_down(ip, mac, gw, o_mac, iface, timespace)
     return str(aux)
 
@@ -131,6 +138,7 @@ def web_display_log_in():
         return redirect(url_for('web_main'))
     # IF NOT, TO LOGIN
     else:
+        libdb.initialize_database()
         # SET A NEW COOKIE
         letters_and_digits = string.ascii_letters + string.digits
         cookie = ''.join((random.choice(letters_and_digits) for i in range(50)))

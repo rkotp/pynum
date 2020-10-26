@@ -3,6 +3,8 @@ import xml.etree.ElementTree as ET
 import pathlib
 import lib.get_debug as lgd
 import lib.log as liblog
+import lib.database as libdb
+import lib.passive_scanner as libps
 
 liblog.write_in_file("PYNUM STARTED")
 
@@ -40,7 +42,7 @@ password = password_aux[0].text
 # CHECK IF DEBUG MODE IS SET
 if (lgd.get_dbg()[0] == -1):
     liblog.write_in_file("ERROR: DEBUG MODE NOT PROPERLY SET IN THE CONFIG FILE")
-    print("DERROR: EBUG MODE NOT PROPERLY SET IN THE CONFIG FILE")
+    print("ERROR: DEBUG MODE NOT PROPERLY SET IN THE CONFIG FILE")
     exit()
 
 if(ui=='gui'):

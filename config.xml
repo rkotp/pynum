@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-	# CREDENTIALS
+	<!-- CREDENTIALS -->
 	<usr>pynum</usr>
-	<pwd>Ch4ng3It!</pwd>
+	<pwd>changeit</pwd>
 
-	# INTERFACE ('gui' OR 'cli')
+	<!-- INTERFACE ('gui' OR 'cli') -->
 	<ui_mode>gui</ui_mode>
 
-	# DEBUG ('yes' or 'no')
+	<!-- DEBUG ('yes' or 'no') -->
 	<debug_mode>no</debug_mode>
+
+	<!-- PASSIVE SCANNER ('yes' or 'no') -->
+	<passive_scanner>yes</passive_scanner>
+	<passive_scanner_interface>wlan0</passive_scanner_interface>
 
 </configuration>
