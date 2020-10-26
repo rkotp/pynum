@@ -1,6 +1,8 @@
 # **************************************************************************************
 # **************************************************************************************
 # IMPORTS
+import sqlite3
+import pathlib
 import random
 import string
 import multiprocessing
@@ -10,12 +12,14 @@ from scapy.all import *
 from termcolor import colored
 import subprocess
 import os
-from .interfaces import *
+import lib.interfaces as libifaces
 import ipaddress
 import lib.wifi_arp_spoofing as arps
 import lib.wireless_active_scanner as was
 import lib.get_debug as lgd
 import lib.log as liblog
+import lib.passive_scanner as libps
+import lib.database as libdb
 #import slow_connection
 # TO_DO: CHANGE FORMAT OF IMPORTS
 
@@ -34,126 +38,17 @@ debug_mode = lgd.get_dbg()[1]
 
 # **************************************************************************************
 # **************************************************************************************
-# AUXILIAR FUNCTION TO SELECT ONE INTERFACE IF NEEDED 
-
-def select_interface(interfaces):
-
-	# IF IT ONLY EXISTS ONE INTERFACE OR THERE IS NOT INTERFACES, IT SHOULD NOT ASK FOR IT
-	if (len(interfaces)==1):
-		return interfaces[0]
-	elif(len(interfaces)==0):
-		return None
-
-	# IN THE OTHER CASES
-	else:
-		i = 1
-		# INTERFACES WILL BE PRINTED WIH AN IDENTIFIER
-		print("\nSeveral interfaces found")
-		for interface in interfaces:
-			print(str(i) + " -->  " + ifaces[i-1])
-			i = i + 1
-		
-		# AND THE IDENTIFIER OF THE SELECTED INTERFACE WILL BE ASKED AND VALIDATED BEFORE RETURNING THE SELECTED
-		print("\nSelect the interface to work with. Type the index of the interface:\n>>> ",end="")
-		iface_index = input()
-		try:
-			val = int(iface_index)
-			if not(val > 0 and val <= len(ifaces)):
-				print("You should enter the index corresponding the option you want. Please, re-run it properly")
-			else:
-				iface = ifaces[val-1]
-				print("\nInterface selected: " + colored(iface, 'green',attrs=['bold']))
-				return iface
-		except ValueError:
-			print("You should enter the index corresponding the option you want. Please, re-run it properly")
-			return None
-
-# **************************************************************************************
-# **************************************************************************************
-# AUXILIAR FUNCTION TO GET THE NETWORK GIVEN THE IP AND THE NETMASK 
-
-def __select_host(hosts):
-	if(len(hosts)<1):
-		return None
-	if(len(hosts)==1):
-		return hosts[0]
-	if(len(hosts)>1):
-		print(colored("[*] Select host. Type the index of the host you want to slow down the connection:","blue"))
-		aux = 1
-		for host in hosts:
-			print(colored("[*][" + str(aux) + "] " + host[0],"blue"))
-			aux = aux + 1
-		
-		host_index = input()
-		try:
-			val = int(host_index)
-			if not(val > 0 and val <= len(hosts)):
-				print("You should enter the index corresponding the option you want. Please, re-run it properly")
-			else:
-				host = hosts[val-1]
-				print("\nHost selected: " + colored(iface, 'green',attrs=['bold']))
-				return host
-		except ValueError:
-			print("You should enter the index corresponding the option you want. Please, re-run it properly")
-			return None
-
-# **************************************************************************************
-# **************************************************************************************
-# AUXILIAR FUNCTION TO GET INFORMATION ABOUT BACKGROUND PROCESSES
-
-def __background_processes_info():
-
-	aux = False
-
-	if(not(len(passive_sniffers)==0)):
-		aux = True
-		print(colored("[*] Passive scanners running at background: ","blue"))
-		for passive_sniffer in passive_sniffers:
-			print(colored("[*][*] " + passive_sniffer[0],"blue"))
-
-	if(False):
-		aux = True
-		print("[*] Slowed connections running at background: ")
-
-	if(False):
-		aux = True
-		print("[*] Fake APs")
-
-		
-	if(aux):
-		print("[!] DO NOT FORGET TO STOP BACKGROUND PROCESSES WHEN YOU DO NOT NEED IT IN ORDER TO GAIN PERFORMANCE")
-
-# **************************************************************************************
-# **************************************************************************************
-# AUXILIAR FUNCTION TO GET THE NETWORK GIVEN THE IP AND THE NETMASK 
-
-def get_network():
-	ip_splitted = interface_ip.split('.')
-	mask_splitted = interface_netmask.split('.')
-	network = str(int(ip_splitted[0])&int(mask_splitted[0])) 
-	network += '.' + str(int(ip_splitted[1])&int(mask_splitted[1]))
-	network += '.' + str(int(ip_splitted[2])&int(mask_splitted[2]))
-	network += '.' + str(int(ip_splitted[3])&int(mask_splitted[3]))
-	return network
-
-# **************************************************************************************
-# **************************************************************************************
-# AUXILIAR FUNCTION TO CHECK IF CERTAIN IP BELONGS TO THE NETWORK SENT BY ARGUMENTS
-
-def belongs_to_network(ip):
-	for ips in ipaddress.IPv4Network(get_network() + '/' + str(interface_netmask)):
-		if str(ips)==ip:
-			return	True
-
-# **************************************************************************************
-# **************************************************************************************
 # AUXILIAR FUNCTION TO GET THE REFRESHED LIST OF ALIVE HOSTS
 
 def get_detected_hosts():
 	while (	queue.qsize() != 0 ):
 		host = queue.get()
 		if ( not(host in detected_hosts) ):
-			detected_hosts.append(host)
+			libdb.insert_host(host[0],host[1],host[2],host[3])
+	hosts_db = libdb.get_host()
+	for host_db in hosts_db:
+		if ( not(host_db in detected_hosts) ):
+			detected_hosts.append(host_db)
 	return detected_hosts
 
 # **************************************************************************************
@@ -255,9 +150,7 @@ def active_scan_background(iface_name,tries,loops,timespace,debug_mode,q):
 	# TO_DO: COMPROBAR SI YA ESTÁN METIDOS
 	for new_detected_host in new_detected_hosts:
 		q.put(new_detected_host)
-
-	#q.put(['192.168.31.218','a0:af:bd:11:05:53','lenovo','wlan0'])
-	#q.put(['192.168.31.148','dc:fb:48:d1:78:47', 'dell','wlan0'])
+		#libdb.insert_host(new_detected_host[0],new_detected_host[1],new_detected_host[3],new_detected_host[2])
 
 # **************************************************************************************
 # **************************************************************************************
@@ -299,44 +192,9 @@ def slow_down_background(victim_ip,victim_mac,supplanted_ip,own_mac,interface,ti
 
 # **************************************************************************************
 # **************************************************************************************
-# FUNCTION EXECUTED EACH TIME THE SCANNER SNIFS A NEW PACKET
 
-def new_packet(packet):
-
-	# GETTING THE SOURCE ADDRESSES
-	if ARP in packet:
-        	ip_src = packet[ARP].psrc
-        	hw_src = packet[ARP].hwsrc
-	else:
-		if ((IP in packet) and (Ether in packet)) :
-			ip_src = packet[IP].src
-			hw_src = packet[Ether].src
-		else:
-			return 0
-
-	# CHECKING IF WE HAVE DISCOVERED A NEW VALID HOST:
-	# 1, CHECKING IF SOURCE BELONG TO NETWORK
-	belongs = belongs_to_network(ip_src)
-	if(belongs):
-		# 2, CHECKING IF THE SOURCE IS NOT THE GATEWAY
-		if(ip_src!=interface_gateway and ip_src!=interface_ip):
-			# 3, CHECKING IF THE SOURCE IS ALREADY IN THE LIST
-			if not([ip_src,hw_src] in detected_hosts):
-				# ADDING THE SOURCE TO THE LIST
-				detected_hosts.append([ip_src,hw_src])
-				
-				# PRINTING DEBUG INFO
-				if(debug_mode):
-					print("NEW HOST DISCOVERED. HOST DISCOVERED: " + str(detected_hosts))
-
-
-# **************************************************************************************
-# **************************************************************************************
-# SETTING THE PASSIVE SNIFFER
-
-#t = AsyncSniffer(iface=ifaces, prn=new_packet, store=False)
-#t.start()
-#t.stop()
+def start_passive_scanner(interface):
+	libps.start_ps(interface)
 
 # **************************************************************************************
 # **************************************************************************************

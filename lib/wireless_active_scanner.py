@@ -47,17 +47,16 @@ def active_scan(iface, tries, loops, timespace, debug_mode):
 					ans,unans = srp(arp_frame,iface=iface,timeout=1,verbose=0)
 					if debug_mode:
 						liblog.write_in_file("ARP REQUEST SENT TO " + str(ips))
-					print("Scanning ip: " + str(ips))
+					print(colored("[*] SCANING IP: " + str(ips),"blue"))
 
 					# IF ANSWER RECEIVED -> HOST ALIVE
 					for snt,recv in ans:
 						if recv:
-							#print(socket.gethostbyaddr(str(recv[ARP].psrc))[0])
 							hostname = 'Unknown hostname'
-							detected_hosts.append([str(recv[ARP].psrc),str(recv[Ether].src),hostname,iface])
+							detected_hosts.append([str(recv[ARP].psrc),str(recv[Ether].src),iface,hostname])
 							if debug_mode:
 								liblog.write_in_file("HOST DETECTED: " + str(ips))
-							print(colored("[*]","blue") + " Host Alive: " + recv[ARP].psrc + " - " + recv[Ether].src)
+							print(colored("[*] HOST ACTIVELY DETECTED: " + str(recv[ARP].psrc) + ", " + str(recv[Ether].src),"green"))
 
 	# RETURN THE HOSTS ALIVE
 	return detected_hosts
