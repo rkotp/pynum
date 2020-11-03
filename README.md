@@ -23,7 +23,7 @@ Donwload, install and run pynum with the following commands:
 ### Usage
 Updated soon
 ### Contact
-Updated soon
+You can contact the developer at rkotp@protonmail.com
 ### License
 This software is licensed under GNU General Public License v3.0. You can review the full license document for more  details.
 ### Authors
