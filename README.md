@@ -8,7 +8,8 @@ The source code has been developed over Python 3.8, so it is strictly mandatory.
 The folowing modules are mandatory. You could install them with the command `pip3 install xxxxx`, where `xxxxx` is each one of the following modules. Otherwise, in the installation method (step 3) another (and easier) method is given. The required modules are:
 - Scapy
 - Flask
-- netifaces
+- ipaddress
+- netaddr
 - termcolor
 ### Installation
 Donwload, install and run pynum with the following commands:
@@ -17,11 +18,11 @@ Donwload, install and run pynum with the following commands:
 2. Access the folder downloaded
 `cd pynum`
 3. Install the required libraries
-`python3 -m pip install -r requirements.txt`
+`sudo python3 -m pip install -r requirements.txt`
 4. Run it and have fun!
-`python3 pynum.py`
+`sudo python3 pynum.py`
 ### Usage
-Updated soon
+First you must change (or at least watch) the credentials at config.xml. Run it with the command 4 of the previous section. Access to your web explorer and navigate to http://<<ip_from_where_pynum_is_running>>:9000. If you are accessing the service from the same machine where it is running you can also access to http://localhost:9000 or http://0.0.0.0:9000. Then, type the credentials and play!
 ### Contact
 You can contact the developer at rkotp@protonmail.com
 ### License
