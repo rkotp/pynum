@@ -25,7 +25,7 @@ Updated soon
 ### Contact
 Updated soon
 ### License
-Updated soon
+This software is licensed under GNU General Public License v3.0. You can review the full license document for more  details.
 ### Authors
 It has been developed under th framework of a master thesis. The authors are:
 * Pedro Ruben González Sánchez - Developer
