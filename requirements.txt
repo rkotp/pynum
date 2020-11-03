@@ -1,0 +1,6 @@
+Flask>=1.0.2
+ipaddress>=1.0.17
+netaddr>=0.8.0
+scapy>=2.4.3
+termcolor>=1.1.0
+
